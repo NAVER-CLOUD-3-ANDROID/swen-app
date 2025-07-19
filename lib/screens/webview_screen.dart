@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../constants/app_colors.dart';
 
 /// 웹뷰 화면 위젯
 class WebViewScreen extends StatefulWidget {
@@ -424,9 +425,26 @@ class _WebViewScreenState extends State<WebViewScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('뉴스 보기'),
-        backgroundColor: Colors.blue,
+        toolbarHeight: 40,
+        titleSpacing: 0,
+        title: Row(
+          children: [
+            const Text('🔗', style: TextStyle(fontSize: 20)),
+            const SizedBox(width: 6),
+            Text(
+              'swen link',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: AppColors.buttonText,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
+        elevation: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
