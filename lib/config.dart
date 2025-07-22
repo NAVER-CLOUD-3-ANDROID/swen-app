@@ -15,7 +15,7 @@ class AppConfig {
     switch (environment) {
       case Environment.development:
         // 개발 서버 주소 - 실제 기기용
-        return 'http://192.168.219.105:8080/api/v1/news';
+        return 'http://default-swen-news-app-se-796e1-107293734-d6a645c63dcb.kr.lb.naverncp.com/api/v1/news';
       case Environment.staging:
         return 'https://staging-api.your-domain.com/api/v1/news/play';
       case Environment.production:
