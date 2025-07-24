@@ -267,6 +267,21 @@ class ApiService {
     }
     return '';
   }
+
+  /// 네이버 소셜 로그인: accessToken을 /login 엔드포인트로 전달
+  static Future<Map<String, dynamic>> loginWithNaver(String accessToken) async {
+    final url = '${AppConfig.baseUrl}/login';
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'accessToken': accessToken}),
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      throw Exception('네이버 로그인 실패: \n${response.body}');
+    }
+  }
 }
 
 /// 기존 코드와 호환을 위한 함수

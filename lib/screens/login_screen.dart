@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_sizes.dart';
 import '../widgets/custom_widgets.dart';
+import 'package:naver_login/naver_login.dart';
+import '../services/api_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,11 +15,24 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   // 네이버 로그인 버튼 클릭 시 호출될 함수 (임시)
   Future<void> _handleNaverLogin() async {
-    // TODO: 네이버 로그인 연동 예정
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('네이버 로그인 시도(연동 예정)')),
-    );
-    // 로그인 성공 시: Navigator.pushReplacementNamed(context, '/main');
+    try {
+      final NaverLoginResult result = await NaverLogin.login();
+      if (result.status == NaverLoginStatus.loggedIn) {
+        final accessToken = result.accessToken;
+        // 백엔드 인증 요청
+        await ApiService.loginWithNaver(accessToken);
+        // 로그인 성공 시 메인화면 이동
+        Navigator.pushReplacementNamed(context, '/main');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('네이버 로그인 실패: ${result.errorMessage}')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('로그인 오류: $e')),
+      );
+    }
   }
 
   @override
