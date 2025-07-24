@@ -11,20 +11,13 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _idController = TextEditingController();
-  final TextEditingController _pwController = TextEditingController();
-
-  @override
-  void dispose() {
-    _idController.dispose();
-    _pwController.dispose();
-    super.dispose();
-  }
-
-  void _onLoginPressed() async {
-    // TODO: 실제 로그인 API 연동 예정
-    // 임시로 바로 메인화면 이동
-    Navigator.pushReplacementNamed(context, '/main');
+  // 네이버 로그인 버튼 클릭 시 호출될 함수 (임시)
+  Future<void> _handleNaverLogin() async {
+    // TODO: 네이버 로그인 연동 예정
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('네이버 로그인 시도(연동 예정)')),
+    );
+    // 로그인 성공 시: Navigator.pushReplacementNamed(context, '/main');
   }
 
   @override
@@ -47,32 +40,23 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: AppSizes.spacingXL),
-                // 아이디 입력
-                TextField(
-                  controller: _idController,
-                  decoration: const InputDecoration(
-                    labelText: '아이디',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: AppSizes.spacingM),
-                // 비밀번호 입력
-                TextField(
-                  controller: _pwController,
-                  decoration: const InputDecoration(
-                    labelText: '비밀번호',
-                    border: OutlineInputBorder(),
-                  ),
-                  obscureText: true,
-                ),
-                const SizedBox(height: AppSizes.spacingL),
-                // 로그인 버튼
+                // 네이버 로그인 버튼
                 SizedBox(
                   width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _onLoginPressed,
-                    style: CustomWidgets.defaultButtonStyle(),
-                    child: const Text('로그인'),
+                  child: ElevatedButton.icon(
+                    icon: Image.asset(
+                      'assets/images/naver_icon.png',
+                      width: 24,
+                      height: 24,
+                    ),
+                    label: const Text('네이버로 로그인'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF03C75A), // 네이버 그린
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    onPressed: _handleNaverLogin,
                   ),
                 ),
               ],
