@@ -13,7 +13,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'services/api_service.dart';
 import 'services/search_service.dart';
 import 'widgets/audio_player.dart';
-import 'screens/splash_screen.dart';
+import 'screens/login_screen.dart';
 import 'screens/webview_screen.dart';
 import 'constants/app_constants.dart';
 import 'constants/loading_messages.dart';
@@ -45,7 +45,7 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/',
       routes: {
-        '/': (context) => const SplashScreen(),
+        '/': (context) => const LoginScreen(),
         '/main': (context) => const NewsPlayerScreen(),
       },
     );

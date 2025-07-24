@@ -3,24 +3,17 @@ import '../constants/app_colors.dart';
 import '../constants/app_sizes.dart';
 import '../widgets/custom_widgets.dart';
 
-/// 스플래시 화면 위젯
-class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
-/// 스플래시 화면 상태 관리
-class _SplashScreenState extends State<SplashScreen> {
+class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _idController = TextEditingController();
   final TextEditingController _pwController = TextEditingController();
 
-  @override
-  void initState() {
-    super.initState();
-  }
-  
   @override
   void dispose() {
     _idController.dispose();
