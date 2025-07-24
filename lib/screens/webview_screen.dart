@@ -153,17 +153,8 @@ class _WebViewScreenState extends State<WebViewScreen> {
 
   /// 고급 User Agent 생성 (ORB 우회용)
   String _generateAdvancedUserAgent() {
-    final List<String> userAgents = [
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.6422.60 Safari/537.36',
-      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.6422.60 Safari/537.36',
-      'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.6422.60 Safari/537.36',
-      'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
-      'Mozilla/5.0 (Linux; Android 15; SM-S921N Build/AP1A.240505.004) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.6422.60 Mobile Safari/537.36',
-    ];
-    
-    // 시간 기반 랜덤 선택
-    final int index = DateTime.now().millisecond % userAgents.length;
-    return userAgents[index];
+    // 항상 Android 모바일 User Agent로 고정
+    return 'Mozilla/5.0 (Linux; Android 15; SM-S921N Build/AP1A.240505.004) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.6422.60 Mobile Safari/537.36';
   }
 
   /// 고급 HTTP 헤더 생성 (ORB 우회용)

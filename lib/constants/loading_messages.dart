@@ -65,8 +65,8 @@ class LoadingAnimationController {
 
   /// 로딩 메시지 애니메이션 시작
   void start() {
+    if (_timer != null) return; // 이미 실행 중이면 중복 실행 방지
     _currentIndex = 0;
-    _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
       _currentIndex = (_currentIndex + 1) % LoadingMessages.messages.length;
       onMessageChanged?.call();

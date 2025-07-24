@@ -36,6 +36,12 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
   void initState() {
     super.initState();
     _setupAudioPlayer();
+    // 오디오 자동 재생이 필요하다면, 첫 프레임 이후로 지연
+    if (widget.autoPlay && widget.audioUrl.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _loadAndPlayAudio();
+      });
+    }
   }
 
   /// 오디오 플레이어 초기 설정
@@ -80,9 +86,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
       }
     });
 
-    if (widget.autoPlay && widget.audioUrl.isNotEmpty) {
-      _loadAndPlayAudio();
-    }
+    // 여기서 autoPlay로 _loadAndPlayAudio() 호출하는 부분은 제거
   }
 
   /// 오디오 URL 변경 시 새 오디오 로드
@@ -112,10 +116,12 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
     });
 
     try {
-      debugPrint('오디오 URL 로드 중: ${widget.audioUrl}');
+      debugPrint('오디오 URL 로드 중:  [38;5;2m${widget.audioUrl} [0m');
       
       // 기존 오디오 정리
-      await _audioPlayer.stop();
+      await _audioPlayer.stop().timeout(const Duration(seconds: 5), onTimeout: () {
+        throw TimeoutException('오디오 정지 타임아웃', const Duration(seconds: 5));
+      });
       
       // 타임아웃 설정 (10초)
       await _audioPlayer.setSourceUrl(widget.audioUrl).timeout(
@@ -125,13 +131,17 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
         },
       );
       
-      await _audioPlayer.setVolume(1.0); // 볼륨 최대 (0.0~1.0 범위)
+      await _audioPlayer.setVolume(1.0).timeout(const Duration(seconds: 2), onTimeout: () {
+        throw TimeoutException('볼륨 설정 타임아웃', const Duration(seconds: 2));
+      });
       
-      // 오디오가 완전히 준비될 때까지 대기
+      // 오디오가 완전히 준비될 때까지 대기 (최대 1초)
       await Future.delayed(const Duration(milliseconds: 500));
       
       debugPrint('오디오 재생 시작');
-      await _audioPlayer.resume();
+      await _audioPlayer.resume().timeout(const Duration(seconds: 5), onTimeout: () {
+        throw TimeoutException('오디오 재생 타임아웃', const Duration(seconds: 5));
+      });
       
       if (mounted) {
         WidgetsBinding.instance.addPostFrameCallback((_) {

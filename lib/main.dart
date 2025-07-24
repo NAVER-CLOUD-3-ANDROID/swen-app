@@ -87,6 +87,12 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
       },
     );
     _loadingAnimationController.start(); // 앱 시작 시 로딩 메시지 애니메이션 시작
+    // 로그인 후 진입 시 바로 뉴스 데이터 로드
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_isPlaying && !_isLoading) {
+        _fetchAndShowPlayer();
+      }
+    });
   }
 
   @override
@@ -330,8 +336,20 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
         child: Column(
           children: [
             _buildLogo(),
-            if (!_isPlaying)
-              Expanded(child: _buildPlayButton())
+            if (_isLoading || !_isPlaying)
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CustomWidgets.loadingIndicator(
+                      size: AppSizes.iconSizeXXL,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(height: AppSizes.spacingL),
+                    _buildLoadingMessage(),
+                  ],
+                ),
+              )
             else
               Expanded(child: _buildMainContent()),
           ],
@@ -365,31 +383,6 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
   }
 
 
-
-  /// 첫 플레이 버튼 위젯
-  Widget _buildPlayButton() {
-    return Center(
-      child: _isLoading
-          ? Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                CustomWidgets.loadingIndicator(
-                  size: AppSizes.iconSizeXXL,
-                  color: AppColors.primary,
-                ),
-                const SizedBox(height: AppSizes.spacingL),
-                _buildLoadingMessage(),
-              ],
-            )
-          : IconButton(
-              iconSize: AppSizes.iconSizeXXXL,
-              icon: const Icon(Icons.play_arrow),
-              color: AppColors.primary,
-              onPressed: _fetchAndShowPlayer,
-              tooltip: AppStrings.playButton,
-            ),
-    );
-  }
 
   /// 로딩 중 메시지 위젯
   Widget _buildLoadingMessage() {
