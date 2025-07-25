@@ -67,30 +67,52 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
   String? _audioUrl;
   List<Map<String, String>> _recommendedNews = [];
   List<Map<String, dynamic>> _sourceNews = []; // sourceNews 추가
-  
+
   // UI 상태
   bool _showScript = false;
   bool _isLoading = false;
   bool _isPlaying = false;
   bool _shouldAutoPlay = false;
   final TextEditingController _searchController = TextEditingController();
-  
+
   // 로딩 메시지 애니메이션 관련 변수들
   late LoadingAnimationController _loadingAnimationController;
 
   @override
   void initState() {
     super.initState();
+
     _loadingAnimationController = LoadingAnimationController(
       onMessageChanged: () {
         if (mounted) setState(() {});
       },
     );
-    _loadingAnimationController.start(); // 앱 시작 시 로딩 메시지 애니메이션 시작
-    // 로그인 후 진입 시 바로 뉴스 데이터 로드
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_isPlaying && !_isLoading) {
-        _fetchAndShowPlayer();
+    _loadingAnimationController.start();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+
+      final uri = Uri.base;
+
+      if (uri.queryParameters.containsKey('code')) {
+        // 로그인 성공 후 코드가 URI에 있으면
+        // uri.queryParameters를 클리어하거나 상태 업데이트 후 리다이렉트
+
+        // 예: 아래 임시 해결책
+        final cleanedUri = Uri(
+          scheme: uri.scheme,
+          host: uri.host,
+          port: uri.port,
+          path: uri.path,
+        );
+        // Flutter web에서는 URL을 강제로 바꾸는 방법 제한적이므로
+        // 로그인 상태 값을 저장하는 전역 상태 또는 로컬 스토리지 사용 권장
+        // 아래는 로그인 후 재탐색 방지 차원에서 바로 이동 처리
+        Navigator.pushReplacementNamed(context, '/main');
+      } else {
+        if (!_isPlaying && !_isLoading) {
+          await _fetchAndShowPlayer();
+        }
       }
     });
   }
@@ -106,26 +128,29 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
   void _updateNewsData(Map<String, dynamic> data, {bool resetScript = false}) {
     if (!mounted) return;
 
-    debugPrint('데이터 업데이트 시작 - 스크립트: ${data['script']?.toString().substring(0, 20)}..., 오디오: ${data['audioUrl']}, 뉴스: ${data['recommendedNews']?.length}개');
-    
+    debugPrint(
+        '데이터 업데이트 시작 - 스크립트: ${data['script']?.toString().substring(0, 20)}..., 오디오: ${data['audioUrl']}, 뉴스: ${data['recommendedNews']?.length}개');
+
     setState(() {
       _script = data['script'];
       _audioUrl = data['audioUrl'];
       _recommendedNews = data['recommendedNews'];
-      _sourceNews = List<Map<String, dynamic>>.from(data['sourceNews'] ?? []); // sourceNews 업데이트
+      _sourceNews = List<Map<String, dynamic>>.from(
+          data['sourceNews'] ?? []); // sourceNews 업데이트
       _isLoading = false;
       _isPlaying = true;
       _shouldAutoPlay = resetScript;
       if (resetScript) _showScript = false;
     });
-    
-    debugPrint('데이터 업데이트 완료 - _isPlaying: $_isPlaying, _shouldAutoPlay: $_shouldAutoPlay');
+
+    debugPrint(
+        '데이터 업데이트 완료 - _isPlaying: $_isPlaying, _shouldAutoPlay: $_shouldAutoPlay');
   }
 
   /// API 호출 및 데이터 로드 (공통 로직)
   Future<void> _loadNewsData({bool isInitialLoad = false}) async {
     if (_isLoading) return;
-    
+
     if (!isInitialLoad) {
       setState(() => _isLoading = true);
     }
@@ -151,19 +176,21 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
     setState(() {
       _isLoading = true;
     });
-    
+
     // 로딩 메시지 애니메이션 시작
     _loadingAnimationController.start();
 
     try {
       final data = await ApiService.fetchNewsData();
-      
+
       if (data != null) {
         setState(() {
           _audioUrl = data['audioUrl'];
           _script = data['script'];
-          _recommendedNews = List<Map<String, String>>.from(data['recommendedNews'] ?? []);
-          _sourceNews = List<Map<String, dynamic>>.from(data['sourceNews'] ?? []);
+          _recommendedNews =
+              List<Map<String, String>>.from(data['recommendedNews'] ?? []);
+          _sourceNews =
+              List<Map<String, dynamic>>.from(data['sourceNews'] ?? []);
           _isPlaying = true;
           _shouldAutoPlay = true;
         });
@@ -171,12 +198,13 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
         ErrorHandler.showErrorSnackBar(context, AppStrings.newsLoadError);
       }
     } catch (error) {
-      ErrorHandler.showErrorSnackBar(context, ErrorHandler.getNewsLoadErrorMessage(error));
+      ErrorHandler.showErrorSnackBar(
+          context, ErrorHandler.getNewsLoadErrorMessage(error));
     } finally {
       setState(() {
         _isLoading = false;
       });
-      
+
       // 로딩 완료 시 애니메이션 정지
       _loadingAnimationController.stop();
     }
@@ -197,7 +225,7 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
   Future<void> _searchNews() async {
     // 키보드 숨기기
     FocusScope.of(context).unfocus();
-    
+
     final query = _searchController.text.trim();
     if (!ErrorHandler.isValidSearchQuery(query)) {
       ErrorHandler.showErrorSnackBar(context, AppStrings.emptySearchMessage);
@@ -207,20 +235,22 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
     setState(() {
       _isLoading = true;
     });
-    
+
     // 로딩 메시지 애니메이션 시작
     _loadingAnimationController.start();
 
     try {
       // 검색어와 함께 API 호출
       final data = await ApiService.fetchNewsData(searchQuery: query);
-      
+
       if (data != null) {
         setState(() {
           _audioUrl = data['audioUrl'];
           _script = data['script'];
-          _recommendedNews = List<Map<String, String>>.from(data['recommendedNews'] ?? []);
-          _sourceNews = List<Map<String, dynamic>>.from(data['sourceNews'] ?? []);
+          _recommendedNews =
+              List<Map<String, String>>.from(data['recommendedNews'] ?? []);
+          _sourceNews =
+              List<Map<String, dynamic>>.from(data['sourceNews'] ?? []);
           _isPlaying = true;
           _shouldAutoPlay = true;
         });
@@ -228,15 +258,16 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
         ErrorHandler.showErrorSnackBar(context, AppStrings.searchError);
       }
     } catch (error) {
-      ErrorHandler.showErrorSnackBar(context, ErrorHandler.getSearchErrorMessage(error));
+      ErrorHandler.showErrorSnackBar(
+          context, ErrorHandler.getSearchErrorMessage(error));
     } finally {
       setState(() {
         _isLoading = false;
       });
-      
+
       // 로딩 완료 시 애니메이션 정지
       _loadingAnimationController.stop();
-      
+
       // 검색 후 입력값 지우기
       _searchController.clear();
     }
@@ -251,7 +282,7 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
   /// 스크립트 모달 표시
   void _showScriptModal() {
     if (_script == null) return;
-    
+
     showDialog(
       context: context,
       barrierDismissible: true, // 바깥 화면 터치로 닫기 가능
@@ -296,7 +327,8 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
                 // 스크립트 내용
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSizes.spacingS),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: AppSizes.spacingS),
                     child: Text(
                       _script!,
                       style: CustomWidgets.defaultTextStyle(
@@ -326,8 +358,6 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
   void _openCurrentDataLink() {
     LinkHandler.openCurrentDataLink(context, _sourceNews);
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -382,8 +412,6 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
     );
   }
 
-
-
   /// 로딩 중 메시지 위젯
   Widget _buildLoadingMessage() {
     return Container(
@@ -402,14 +430,14 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppSizes.spacingS),
-                      Text(
-              '잠시만 기다려주세요...',
-              style: CustomWidgets.defaultTextStyle(
-                fontSize: AppSizes.fontSizeSmall,
-                color: AppColors.textSecondary,
-              ),
-              textAlign: TextAlign.center,
+          Text(
+            '잠시만 기다려주세요...',
+            style: CustomWidgets.defaultTextStyle(
+              fontSize: AppSizes.fontSizeSmall,
+              color: AppColors.textSecondary,
             ),
+            textAlign: TextAlign.center,
+          ),
         ],
       ),
     );
@@ -430,12 +458,12 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
             ],
           ),
         ),
-        
+
         // 하단 스크롤 영역 (뉴스 + 스크립트)
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: AppSizes.spacingL),
-        child: Column(
+            child: Column(
               children: [
                 const SizedBox(height: AppSizes.spacingL), // 상단 여백 추가
                 if (_recommendedNews.isNotEmpty) ...[
@@ -573,7 +601,8 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
             child: ListView.builder(
               padding: const EdgeInsets.all(AppSizes.spacingS),
               itemCount: _recommendedNews.length,
-              itemBuilder: (context, index) => _buildNewsItem(_recommendedNews[index]),
+              itemBuilder: (context, index) =>
+                  _buildNewsItem(_recommendedNews[index]),
             ),
           ),
         ),
@@ -584,7 +613,7 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
   /// 개별 뉴스 아이템 위젯
   Widget _buildNewsItem(Map<String, String> news) {
     final hasValidUrl = ErrorHandler.isValidUrl(news['url']);
-    
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: InkWell(
@@ -593,7 +622,7 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
           alignment: Alignment.centerLeft,
           child: Row(
             children: [
-            Text(
+              Text(
                 AppStrings.bulletPoint,
                 style: CustomWidgets.defaultTextStyle(
                   fontSize: AppSizes.fontSizeMedium,
@@ -657,7 +686,8 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
                     const Size(AppSizes.iconSizeXXL, AppSizes.iconSizeXXL),
                   ),
                   elevation: WidgetStateProperty.all(4),
-                  shadowColor: WidgetStateProperty.all(AppColors.primary.withOpacity(0.3)),
+                  shadowColor: WidgetStateProperty.all(
+                      AppColors.primary.withOpacity(0.3)),
                 ),
                 child: const Icon(
                   Icons.link,
@@ -746,4 +776,3 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
     );
   }
 }
-

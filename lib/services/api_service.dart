@@ -11,59 +11,87 @@ class ApiConstants {
   static const String scriptKey = 'script';
   static const String dataKey = 'data';
   static const String statusKey = 'status';
-  static const List<String> audioUrlKeys = ['audioUrl', 'audio_url', 'audioFileUrl'];
+  static const List<String> audioUrlKeys = [
+    'audioUrl',
+    'audio_url',
+    'audioFileUrl'
+  ];
 }
 
 /// API 서비스 클래스
 class ApiService {
   static const Duration _timeout = Duration(seconds: 30);
-  
+
+  // 요청 URL
+  final String backendUrl = 'http://localhost:8080/oauth2/authorization/naver';
+
+  /// 네이버 소셜 로그인 요청 메서드
+  /// 실제로는 백엔드 인증 서버로 로그인 요청을 보내고 결과를 받는 구조
+  Future<Map<String, dynamic>?> requestNaverLogin() async {
+    try {
+      final url =
+          'http://localhost:8080/api/auth/user'; // 예, 로그인 후 사용자 정보 반환 API
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        print('사용자 정보 요청 실패: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('사용자 정보 요청 예외: $e');
+    }
+    return null;
+  }
+
   /// 뉴스 데이터를 가져오는 함수
-  static Future<Map<String, dynamic>> fetchNewsData({String? searchQuery}) async {
+  static Future<Map<String, dynamic>> fetchNewsData(
+      {String? searchQuery}) async {
     try {
       String url;
       http.Response response;
-      
+
       if (searchQuery != null && searchQuery.trim().isNotEmpty) {
         // 검색어가 있으면 POST 요청으로 검색
         url = '${ApiConstants.baseUrl}/play';
         print('검색 API 호출 시작: $url (검색어: $searchQuery)');
-        
-        response = await http.post(
-          Uri.parse(url),
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: json.encode({
-            'topic': searchQuery.trim(),
-            'scriptLength': 'long',
-          }),
-        ).timeout(_timeout);
+
+        response = await http
+            .post(
+              Uri.parse(url),
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: json.encode({
+                'topic': searchQuery.trim(),
+                'scriptLength': 'long',
+              }),
+            )
+            .timeout(_timeout);
       } else {
         // 검색어가 없으면 기본 GET 요청
         url = '${ApiConstants.baseUrl}/play?scriptLength=LONG';
         print('기본 API 호출 시작: $url');
-        
-        response = await http.get(
-          Uri.parse(url),
-        ).timeout(_timeout);
+
+        response = await http
+            .get(
+              Uri.parse(url),
+            )
+            .timeout(_timeout);
       }
-      
+
       print('API 응답 상태: ${response.statusCode}');
-      
+
       if (response.statusCode == 500) {
         print('서버 내부 오류 발생 - 테스트 데이터 사용');
         return _getTestData(searchQuery: searchQuery);
       }
-      
+
       return _handleResponse(response);
     } catch (e) {
       print('API 호출 실패: $e - 테스트 데이터 사용');
       return _getTestData(searchQuery: searchQuery);
     }
   }
-
-
 
   /// 서버 응답 처리
   static Map<String, dynamic> _handleResponse(http.Response response) {
@@ -88,28 +116,28 @@ class ApiService {
     print('전체 API 응답: $jsonResponse');
     final data = jsonResponse[ApiConstants.dataKey];
     print('데이터 부분: $data');
-    
+
     if (data != null && data[ApiConstants.scriptKey] != null) {
       final script = data[ApiConstants.scriptKey] as String;
       final audioUrl = extractAudioUrl(data);
-      
+
       // 추천 뉴스 데이터 추출 - 다양한 키 이름 시도
       List<Map<String, String>> recommendedNews = [];
       List<Map<String, dynamic>> sourceNews = [];
-      
+
       // 추천 뉴스 추출 (서버 응답 구조에 맞게 수정)
       final recommendedList = data['recommendedNews'] as List<dynamic>?;
       if (recommendedList != null && recommendedList.isNotEmpty) {
         print('추천 뉴스 데이터 발견: $recommendedList');
-        
+
         for (int i = 0; i < recommendedList.length; i++) {
           final item = recommendedList[i];
           print('뉴스 아이템 $i: $item');
-          
+
           if (item is Map<String, dynamic>) {
             final title = item['title']?.toString() ?? '';
             final link = item['link']?.toString() ?? '';
-            
+
             if (title.isNotEmpty) {
               recommendedNews.add({
                 'title': title,
@@ -120,7 +148,7 @@ class ApiService {
           }
         }
       }
-      
+
       // sourceNews 추출
       final sourceKeys = ['sourceNews', 'sourcenews', 'source_news'];
       for (final key in sourceKeys) {
@@ -131,7 +159,7 @@ class ApiService {
           break;
         }
       }
-      
+
       print('최종 파싱된 추천 뉴스: $recommendedNews');
       print('최종 파싱된 sourceNews: $sourceNews');
       return {
@@ -149,11 +177,15 @@ class ApiService {
     if (searchQuery != null && searchQuery.trim().isNotEmpty) {
       // 검색어에 따른 다른 테스트 데이터
       String searchTerm = searchQuery.trim().toLowerCase();
-      
-      if (searchTerm.contains('호우') || searchTerm.contains('비') || searchTerm.contains('강우')) {
+
+      if (searchTerm.contains('호우') ||
+          searchTerm.contains('비') ||
+          searchTerm.contains('강우')) {
         return {
-          'script': '"$searchQuery" 관련 뉴스입니다. 최근 호우와 관련된 기상 상황과 피해 현황을 전해드립니다. 많은 지역에서 강우가 예상되며, 시민들의 안전에 각별한 주의가 필요합니다.',
-          'audioUrl': 'https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3',
+          'script':
+              '"$searchQuery" 관련 뉴스입니다. 최근 호우와 관련된 기상 상황과 피해 현황을 전해드립니다. 많은 지역에서 강우가 예상되며, 시민들의 안전에 각별한 주의가 필요합니다.',
+          'audioUrl':
+              'https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3',
           'recommendedNews': [
             {
               'title': '전국 호우 예보, 안전에 주의',
@@ -179,7 +211,8 @@ class ApiService {
       } else if (searchTerm.contains('코로나') || searchTerm.contains('감염')) {
         return {
           'script': '"$searchQuery" 관련 뉴스입니다. 코로나19 상황과 예방 수칙에 대해 전해드립니다.',
-          'audioUrl': 'https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3',
+          'audioUrl':
+              'https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3',
           'recommendedNews': [
             {
               'title': '코로나19 신규 확진자 현황',
@@ -201,7 +234,8 @@ class ApiService {
       } else {
         return {
           'script': '"$searchQuery"에 대한 검색 결과입니다. 관련 뉴스와 정보를 찾아보았습니다.',
-          'audioUrl': 'https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3',
+          'audioUrl':
+              'https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3',
           'recommendedNews': [
             {
               'title': '"$searchQuery" 관련 뉴스 1',
@@ -223,8 +257,10 @@ class ApiService {
       }
     }
     return {
-      'script': '안녕하세요! SWEN 뉴스입니다. 현재 서버에서 뉴스를 가져오는 중입니다. 잠시만 기다려주세요. (테스트 모드)',
-      'audioUrl': 'https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3',
+      'script':
+          '안녕하세요! SWEN 뉴스입니다. 현재 서버에서 뉴스를 가져오는 중입니다. 잠시만 기다려주세요. (테스트 모드)',
+      'audioUrl':
+          'https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3',
       'recommendedNews': [
         {
           'title': '서버 연결 중 - 잠시만 기다려주세요',
@@ -276,4 +312,4 @@ Future<Map<String, String>> fetchScriptAndAudioUrl() async {
     ApiConstants.scriptKey: data[ApiConstants.scriptKey] as String,
     'audioUrl': ApiService.extractAudioUrl(data),
   };
-} 
+}

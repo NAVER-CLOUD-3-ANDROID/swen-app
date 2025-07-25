@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_sizes.dart';
 import '../widgets/custom_widgets.dart';
+import '../services/api_service.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'dart:html' as html;
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -11,13 +14,11 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  // 네이버 로그인 버튼 클릭 시 호출될 함수 (임시)
-  Future<void> _handleNaverLogin() async {
-    // TODO: 네이버 로그인 연동 예정
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('네이버 로그인 시도(연동 예정)')),
-    );
-    // 로그인 성공 시: Navigator.pushReplacementNamed(context, '/main');
+  final apiService = ApiService();
+
+  void _handleNaverLogin() {
+    final naverAuthUrl = 'http://localhost:8080/oauth2/authorization/naver';
+    html.window.location.href = naverAuthUrl; // 같은 브라우저 탭 내에서 페이지가 이동합니다.
   }
 
   @override
@@ -30,7 +31,6 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // 로고
                 Text(
                   'SWEN',
                   style: CustomWidgets.defaultTextStyle(
@@ -40,7 +40,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: AppSizes.spacingXL),
-                // 네이버 로그인 버튼
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
@@ -51,12 +50,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     label: const Text('네이버로 로그인'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF03C75A), // 네이버 그린
+                      backgroundColor: const Color(0xFF03C75A),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      textStyle: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold),
                     ),
-                    onPressed: _handleNaverLogin,
+                    onPressed: _handleNaverLogin, // 네이버 로그인 요청 함수 연결
                   ),
                 ),
               ],
@@ -66,4 +66,4 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-} 
+}
