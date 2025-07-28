@@ -16,9 +16,11 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final apiService = ApiService();
 
-  void _handleNaverLogin() {
-    final naverAuthUrl = 'http://localhost:8080/oauth2/authorization/naver';
-    html.window.location.href = naverAuthUrl; // 같은 브라우저 탭 내에서 페이지가 이동합니다.
+  void handleNaverLogin() {
+    const naverLoginUrl = 'http://localhost:8080/naver'; // 실제 URL
+
+    // 현재 창에서 리디렉션
+    html.window.location.href = naverLoginUrl;
   }
 
   @override
@@ -56,7 +58,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       textStyle: const TextStyle(
                           fontSize: 18, fontWeight: FontWeight.bold),
                     ),
-                    onPressed: _handleNaverLogin, // 네이버 로그인 요청 함수 연결
+                    onPressed: handleNaverLogin, // 네이버 로그인 요청 함수 연결
                   ),
                 ),
               ],

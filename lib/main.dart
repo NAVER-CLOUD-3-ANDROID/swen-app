@@ -3,9 +3,11 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter_naver_login/interface/types/naver_login_status.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
@@ -14,15 +16,34 @@ import 'services/api_service.dart';
 import 'services/search_service.dart';
 import 'widgets/audio_player.dart';
 import 'screens/login_screen.dart';
-import 'screens/webview_screen.dart';
 import 'constants/app_constants.dart';
 import 'constants/loading_messages.dart';
 import 'utils/error_handler.dart';
 import 'utils/link_handler.dart';
 import 'widgets/custom_widgets.dart';
 
+import 'package:flutter/material.dart';
+import 'package:flutter_naver_login/flutter_naver_login.dart';
+
 void main() {
   runApp(const MyApp());
+}
+
+Future<void> someFunction() async {
+  try {
+    final result = await FlutterNaverLogin.logIn();
+
+    if (result.status == NaverLoginStatus.loggedIn) {
+      print('✅ 로그인 성공');
+      print('AccessToken: ${result.accessToken}');
+      print('User email: ${result.account?.email}');
+      // 로그인 후 원하는 경로로 이동하거나 상태 저장
+    } else {
+      print('❗️ 로그인 실패 또는 취소됨');
+    }
+  } catch (e) {
+    print('❗️ 네이버 로그인 중 오류 발생: $e');
+  }
 }
 
 /// 메인 앱 위젯

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:swen/screens/platform_webview_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../screens/webview_screen.dart';
+import '../screens/native_webview_screen.dart';
 import '../constants/app_constants.dart';
 import '../utils/error_handler.dart';
 
@@ -11,20 +12,21 @@ class LinkHandler {
   static void handleNewsTap(BuildContext context, Map<String, String> news) {
     final title = news['title'] ?? '관련 뉴스';
     final url = news['url'];
-    
+
     debugPrint('뉴스 클릭됨 - 제목: $title, URL: $url');
-    
+
     if (url != null && ErrorHandler.isValidUrl(url)) {
       final normalizedUrl = ErrorHandler.normalizeUrl(url);
       debugPrint('정규화된 URL: $normalizedUrl');
-      
+
       // 웹뷰로 먼저 시도
       Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (context) => WebViewScreen(
+          builder: (context) => PlatformWebViewScreen(
             url: normalizedUrl,
             title: title,
-            onLoadFailed: () => _openInExternalBrowser(normalizedUrl, title, context),
+            onLoadFailed: () =>
+                _openInExternalBrowser(normalizedUrl, title, context),
           ),
         ),
       );
@@ -35,32 +37,34 @@ class LinkHandler {
   }
 
   /// 현재 데이터의 링크로 웹뷰 열기 (sourceNews의 link 사용)
-  static void openCurrentDataLink(BuildContext context, List<Map<String, dynamic>> sourceNews) {
+  static void openCurrentDataLink(
+      BuildContext context, List<Map<String, dynamic>> sourceNews) {
     debugPrint('링크 버튼 클릭됨 - sourceNews 개수: ${sourceNews.length}');
     debugPrint('sourceNews 내용: $sourceNews');
-    
+
     // sourceNews에서 첫 번째 뉴스의 link 사용
     if (sourceNews.isNotEmpty) {
       final firstSourceNews = sourceNews.first;
       debugPrint('첫 번째 sourceNews: $firstSourceNews');
-      
+
       final link = firstSourceNews['link'] ?? firstSourceNews['originallink'];
       final title = firstSourceNews['title'] ?? '관련 뉴스';
-      
+
       debugPrint('찾은 링크: $link');
       debugPrint('뉴스 제목: $title');
-      
+
       if (link != null && ErrorHandler.isValidUrl(link)) {
         final normalizedUrl = ErrorHandler.normalizeUrl(link);
         debugPrint('정규화된 URL: $normalizedUrl');
-        
+
         // 웹뷰로 먼저 시도
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => WebViewScreen(
+            builder: (context) => PlatformWebViewScreen(
               url: normalizedUrl,
               title: title,
-              onLoadFailed: () => _openInExternalBrowser(normalizedUrl, title, context),
+              onLoadFailed: () =>
+                  _openInExternalBrowser(normalizedUrl, title, context),
             ),
           ),
         );
@@ -75,16 +79,17 @@ class LinkHandler {
   }
 
   /// 첫 번째 뉴스 링크로 웹뷰 열기
-  static void openFirstNewsLink(BuildContext context, List<Map<String, String>> recommendedNews) {
+  static void openFirstNewsLink(
+      BuildContext context, List<Map<String, String>> recommendedNews) {
     if (recommendedNews.isEmpty) return;
-    
+
     final firstNews = recommendedNews.first;
     final url = firstNews['url'];
-    
+
     if (url != null && ErrorHandler.isValidUrl(url)) {
       Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (context) => WebViewScreen(
+          builder: (context) => PlatformWebViewScreen(
             url: url,
             title: firstNews['title'] ?? '관련 뉴스',
           ),
@@ -96,15 +101,16 @@ class LinkHandler {
   }
 
   /// 외부 브라우저로 링크 열기
-  static Future<void> _openInExternalBrowser(String url, String title, BuildContext context) async {
+  static Future<void> _openInExternalBrowser(
+      String url, String title, BuildContext context) async {
     debugPrint('외부 브라우저로 열기 시도: $url');
-    
+
     try {
       final uri = Uri.parse(url);
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
         debugPrint('외부 브라우저로 성공적으로 열림: $url');
-        
+
         // 성공 메시지 표시
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -135,7 +141,8 @@ class LinkHandler {
   }
 
   /// URL 오류 다이얼로그 표시
-  static void _showUrlErrorDialog(String? url, String title, BuildContext context) {
+  static void _showUrlErrorDialog(
+      String? url, String title, BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -165,7 +172,8 @@ class LinkHandler {
   }
 
   /// 브라우저 오류 다이얼로그 표시
-  static void _showBrowserErrorDialog(String url, String title, BuildContext context) {
+  static void _showBrowserErrorDialog(
+      String url, String title, BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -260,4 +268,4 @@ class LinkHandler {
       );
     });
   }
-} 
+}

@@ -5,12 +5,12 @@ import 'package:url_launcher/url_launcher.dart';
 import '../constants/app_colors.dart';
 
 /// 웹뷰 화면 위젯
-class WebViewScreen extends StatefulWidget {
+class NativeWebViewScreen extends StatefulWidget {
   final String url;
   final String? title;
   final VoidCallback? onLoadFailed;
 
-  const WebViewScreen({
+  const NativeWebViewScreen({
     super.key,
     required this.url,
     this.title,
@@ -18,11 +18,12 @@ class WebViewScreen extends StatefulWidget {
   });
 
   @override
-  State<WebViewScreen> createState() => _WebViewScreenState();
+  State<NativeWebViewScreen> createState() =>
+      _WebViewScreenState(); // ✅ 꼭 이 이름이 아래와 맞아야 함
 }
 
 /// 웹뷰 화면 상태 관리
-class _WebViewScreenState extends State<WebViewScreen> {
+class _WebViewScreenState extends State<NativeWebViewScreen> {
   late final WebViewController _controller;
   bool _isLoading = true;
   bool _hasError = false;
@@ -40,18 +41,19 @@ class _WebViewScreenState extends State<WebViewScreen> {
   /// 웹뷰 초기화
   void _initializeWebView() {
     debugPrint('웹뷰 초기화 시작: ${widget.url}');
-    
+
     // 간단한 URL 정규화
     String initialUrl = widget.url;
-    
+
     // URL에 프로토콜이 없으면 https 추가
-    if (!initialUrl.startsWith('http://') && !initialUrl.startsWith('https://')) {
+    if (!initialUrl.startsWith('http://') &&
+        !initialUrl.startsWith('https://')) {
       initialUrl = 'https://$initialUrl';
     }
-    
+
     // URL 공백 제거
     initialUrl = initialUrl.trim();
-    
+
     // URL 파싱 및 검증
     Uri? parsedUri;
     try {
@@ -63,9 +65,9 @@ class _WebViewScreenState extends State<WebViewScreen> {
       initialUrl = 'https://www.google.com';
       parsedUri = Uri.parse(initialUrl);
     }
-    
+
     debugPrint('최종 URL: $initialUrl');
-    
+
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setUserAgent(_generateAdvancedUserAgent())
@@ -95,15 +97,18 @@ class _WebViewScreenState extends State<WebViewScreen> {
               _isLoading = false;
               _loadAttempts = 0; // 성공 시 시도 횟수 리셋
             });
-            
+
             // 실시간 ORB 우회 JavaScript 주입
             _injectRealTimeBypass();
           },
           onWebResourceError: (WebResourceError error) {
-            debugPrint('웹뷰 오류 발생: ${error.description} (코드: ${error.errorCode})');
-            
+            debugPrint(
+                '웹뷰 오류 발생: ${error.description} (코드: ${error.errorCode})');
+
             // ORB 오류 감지 시 한 번만 재시도
-            if ((error.description.contains('ORB') || error.description.contains('BLOCKED')) && _loadAttempts == 0) {
+            if ((error.description.contains('ORB') ||
+                    error.description.contains('BLOCKED')) &&
+                _loadAttempts == 0) {
               debugPrint('ORB 차단 감지! 한 번만 재시도...');
               _loadAttempts++;
               Future.delayed(Duration(seconds: 2), () {
@@ -113,12 +118,13 @@ class _WebViewScreenState extends State<WebViewScreen> {
               });
               return;
             }
-            
+
             // 연결 오류나 타임아웃은 한 번만 재시도
-            if ((error.errorCode == -6 || error.errorCode == -8) && _loadAttempts < 1) {
+            if ((error.errorCode == -6 || error.errorCode == -8) &&
+                _loadAttempts < 1) {
               _loadAttempts++;
               debugPrint('연결 오류로 한 번만 재시도: $_loadAttempts');
-              
+
               Future.delayed(Duration(seconds: 3), () {
                 if (mounted) {
                   _controller.reload();
@@ -126,14 +132,14 @@ class _WebViewScreenState extends State<WebViewScreen> {
               });
               return;
             }
-            
+
             // 최대 재시도 횟수 초과 또는 다른 오류
             debugPrint('웹뷰 오류로 인한 최종 실패');
             setState(() {
               _hasError = true;
               _errorMessage = _getErrorMessage(error);
             });
-            
+
             // 실패 콜백 호출
             if (!_hasCalledFailedCallback && widget.onLoadFailed != null) {
               _hasCalledFailedCallback = true;
@@ -146,7 +152,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
           },
         ),
       )
-      
+
       // 고급 헤더로 페이지 로드 (ORB 우회용)
       ..loadRequest(parsedUri!, headers: _generateAdvancedHeaders(parsedUri!));
   }
@@ -160,10 +166,11 @@ class _WebViewScreenState extends State<WebViewScreen> {
   /// 고급 HTTP 헤더 생성 (ORB 우회용)
   Map<String, String> _generateAdvancedHeaders(Uri uri) {
     final String userAgent = _generateAdvancedUserAgent();
-    
+
     return {
       'User-Agent': userAgent,
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+      'Accept':
+          'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
       'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
       'Accept-Encoding': 'gzip, deflate, br',
       'DNT': '1',
@@ -174,7 +181,8 @@ class _WebViewScreenState extends State<WebViewScreen> {
       'Sec-Fetch-Site': 'none',
       'Sec-Fetch-User': '?1',
       'Cache-Control': 'max-age=0',
-      'Sec-Ch-Ua': '"Chromium";v="125", "Google Chrome";v="125", "Not_A Brand";v="99"',
+      'Sec-Ch-Ua':
+          '"Chromium";v="125", "Google Chrome";v="125", "Not_A Brand";v="99"',
       'Sec-Ch-Ua-Mobile': '?0',
       'Sec-Ch-Ua-Platform': '"Windows"',
       'Sec-GPC': '1',
@@ -220,16 +228,17 @@ class _WebViewScreenState extends State<WebViewScreen> {
 
   /// 페이지 다시 로드 (안정적인 버전)
   void _reloadPage() {
-    if (_loadAttempts < 1) { // 한 번만 재시도
+    if (_loadAttempts < 1) {
+      // 한 번만 재시도
       _loadAttempts++;
       debugPrint('페이지 다시 로드 시도: $_loadAttempts');
-      
+
       setState(() {
         _isLoading = true;
         _hasError = false;
         _hasCalledFailedCallback = false;
       });
-      
+
       // 동적 우회 시스템으로 재시도
       _retryWithDynamicBypass();
     } else {
@@ -244,10 +253,11 @@ class _WebViewScreenState extends State<WebViewScreen> {
   void _retryWithDynamicBypass() {
     // 새로운 User Agent와 헤더로 재시도
     final String newUserAgent = _generateAdvancedUserAgent();
-    final Map<String, String> newHeaders = _generateAdvancedHeaders(Uri.parse(widget.url));
-    
+    final Map<String, String> newHeaders =
+        _generateAdvancedHeaders(Uri.parse(widget.url));
+
     debugPrint('동적 우회 재시도 - User Agent: $newUserAgent');
-    
+
     _controller
       ..setUserAgent(newUserAgent)
       ..loadRequest(Uri.parse(widget.url), headers: newHeaders);
@@ -504,7 +514,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
           else
             // 웹뷰
             WebViewWidget(controller: _controller),
-          
+
           // 로딩 인디케이터
           if (_isLoading && !_hasError)
             const Center(
@@ -514,4 +524,4 @@ class _WebViewScreenState extends State<WebViewScreen> {
       ),
     );
   }
-} 
+}
